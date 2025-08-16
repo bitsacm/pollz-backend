@@ -1,0 +1,30 @@
+# Environment variables and secrets
+.env
+
+# Django
+*.log
+*.pot
+*.pyc
+*__pycache__*
+db.sqlite3
+
+
+# Virtual environments
+venv/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+backup.json
+data_dump.json
+nohup.out

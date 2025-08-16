@@ -1,0 +1,47 @@
+services:
+  db:
+    container_name: pollz_db
+    image: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -d ${POSTGRES_DB} -U ${POSTGRES_USER}"] 
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  web:
+    container_name: pollz_web
+    build: .
+    ports:
+      - "8000:8000"
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - staticfiles:/app/staticfiles
+  
+  nginx:
+    container_name: pollz_nginx
+    image: nginx:mainline-alpine
+    ports:
+      - 6969:80
+    depends_on:
+      - web
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - staticfiles:/app/staticfiles
+    restart: always
+
+volumes:
+  staticfiles:
+  postgres_data:
