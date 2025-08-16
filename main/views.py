@@ -655,8 +655,6 @@ def project_info(request):
             ],
             'project_creators': [
                 {
-                    'name': 'BITS ACM Student Chapter',
-                    'github_url': 'https://github.com/bitsacm',
                     'story': """Hello from the initiators! Back in our second year, the three of us—who had just met after vacation and were from the same back team—came up with this idea. We weren't into the election scene, but as a money-minded guy, Madme suggested, "Let's earn from the college polls via exit polls." The problem? Only two days were left before the election, and Razorpay integration wasn't happening. So, we took it lightly and just shipped a simple exit poll version with live chats—and the system predicted the results accurately!
 
 It was a small, fun project at the time. Now, a year later, we want to boost the OSS culture on campus. We thought, why not revive our very first Pollz project—but with a twist? This time, it won't just be limited to elections, but to everything. It's the voting voice of Pilani!
