@@ -31,6 +31,10 @@ urlpatterns = [
     path('stats/', views.voting_stats, name='voting_stats'),
     path('stats/dashboard/', views.dashboard_stats, name='dashboard_stats'),
     
+    # ========== CONTRIBUTIONS ==========
+    path('contributions/project-info/', views.project_info, name='project_info'),
+    path('contributions/github-contributors/', views.github_contributors, name='github_contributors'),
+    
     # ========== LEGACY ENDPOINTS (for backward compatibility) ==========
     path('gensec_vote/', views.cast_anonymous_election_vote, name='gensec_vote_legacy'),  # Redirect to anonymous voting
     path('prez_vote/', views.cast_anonymous_election_vote, name='prez_vote_legacy'),     # Redirect to anonymous voting
