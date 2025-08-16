@@ -184,3 +184,6 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET")
+
+# GitHub API Configuration
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # Personal Access Token for GitHub API
