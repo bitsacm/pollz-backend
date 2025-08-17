@@ -36,8 +36,11 @@ docker-compose exec web python manage.py createsuperuser
 # Add sample data (creates departments, huels, election candidates, clubs - NO votes)
 docker-compose exec web python manage.py populate_sample_data
 
-# Add voter
-docker-compose exec web python manage.py add_voter
+# Add huel
+docker-compose exec web python manage.py populate_huel_courses
+
+#Add Departments
+docker-compose exec web python manage.py populate_oasis_data.py
 
 # Add election candidates
 docker-compose exec web python manage.py add_election_candidates
