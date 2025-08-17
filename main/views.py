@@ -1,13 +1,19 @@
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.models import User
-from django.http import JsonResponse
-from django.db.models import Q, Sum, Avg, Count
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.response import Response
-from rest_framework import status
+import json
 import requests
+from django.conf import settings
+from django.db.models import Q, Sum, Avg, Count
+from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth import get_user_model
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
+
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 from .models import (
     ElectionPosition, ElectionCandidate, AnonymousElectionVote,
@@ -22,7 +28,8 @@ from .serializers import (
     DepartmentClubSerializer, DepartmentClubVoteSerializer, DepartmentClubCommentSerializer,
     VotingStatsSerializer
 )
-from rest_framework_simplejwt.exceptions import TokenError
+
+User = get_user_model()
 
 # ========== UTILITY FUNCTIONS ==========
 
@@ -31,13 +38,12 @@ def get_token_for_user(user):
     return tokens
 
 def get_or_create_user_profile(user, google_data=None):
-    """Get or create user profile with Google data"""
     profile, created = UserProfile.objects.get_or_create(
         user=user,
         defaults={
-            'google_id': google_data.get('id') if google_data else None,
+            'google_id': google_data.get('sub') if google_data else None,
             'picture': google_data.get('picture', '') if google_data else '',
-            'is_verified': True if google_data else False
+            'is_verified': True
         }
     )
     return profile
@@ -45,42 +51,50 @@ def get_or_create_user_profile(user, google_data=None):
 # ========== AUTHENTICATION VIEWS ==========
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def google_login(request):
-    """Enhanced Google login with user profile creation"""
+    """
+    Authenticates a user with a Google ID token. If the user doesn't exist,
+    it creates a new user and a corresponding UserProfile.
+    """
     try:
-        access_token = request.data.get("access_token")
+        # Get the id_token directly from the request data
+        token = request.data.get("id_token")
         
-        if not access_token:
-            return Response({"error": "access_token is required"}, status=400)
+        if not token:
+            return Response({"error": "id_token is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Get user profile from Google
-        profile_info_url = "https://www.googleapis.com/oauth2/v1/userinfo"
-        headers = {"Authorization": f"Bearer {access_token}"}
-        profile_info_response = requests.get(profile_info_url, headers=headers)
-
-        if not profile_info_response.ok:
-            return Response({"error": "Invalid token"}, status=400)
-
-        profile_info = profile_info_response.json()
-        email = profile_info["email"]
-
+        # Validate the ID token with Google using the official library
+        try:
+            id_info = id_token.verify_oauth2_token(token, google_requests.Request(), settings.GOOGLE_CLIENT_ID)
+        except ValueError as e:
+            return Response({"error": "Token not verified with Google"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Extract user profile information directly from the validated token's payload
+        email = id_info.get("email")
+        first_name = id_info.get("given_name", "")
+        last_name = id_info.get("family_name", "")
+        
+        if not email:
+            return Response({"error": "Email not found in token"}, status=status.HTTP_400_BAD_REQUEST)
+            
         # Check if user exists
         try:
             user = User.objects.get(email=email)
-            profile = get_or_create_user_profile(user, profile_info)
+            profile = get_or_create_user_profile(user, id_info)
             message = "User already registered. Signing in..."
         except User.DoesNotExist:
-            # Create new user
-            user = User.objects.create(
-                username=profile_info["id"],
+            # Create a new user if they don't exist
+            user = User.objects.create_user(
                 email=email,
-                first_name=profile_info.get("given_name", ""),
-                last_name=profile_info.get("family_name", "")
+                username=id_info["sub"],
+                first_name=first_name,
+                last_name=last_name
             )
-            profile = get_or_create_user_profile(user, profile_info)
+            profile = get_or_create_user_profile(user, id_info)
             message = "User registered successfully."
-
-        # Generate JWT tokens
+            
+        # Generate JWT tokens for the authenticated user
         tokens = get_token_for_user(user)
         user_data = UserProfileSerializer(profile, context={'request': request}).data
 
@@ -91,10 +105,10 @@ def google_login(request):
                 "refresh": str(tokens),
                 "access": str(tokens.access_token),
             }
-        }, status=200)
+        }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        return Response({"error": str(e)}, status=400)
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
