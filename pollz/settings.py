@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
-from  dotenv import load_dotenv
+from dotenv import load_dotenv
 
 load_dotenv(".env")
 
@@ -187,3 +187,7 @@ RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET")
 
 # GitHub API Configuration
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # Personal Access Token for GitHub API
+
+
+# Google OAuth Client ID
+GOOGLE_CLIENT_ID = os.getenv("REACT_APP_GOOGLE_CLIENT_ID")

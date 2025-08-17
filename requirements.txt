@@ -12,3 +12,4 @@ django-cors-headers
 razorpay
 psycopg2-binary==2.9.9
 python-dotenv
+google-auth-oauthlib
