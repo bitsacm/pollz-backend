@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from main.models import (
-    ElectionPosition, ElectionCandidate, ElectionVote,
-    Department, Huel, HuelRating, HuelVote, HuelComment,
+    ElectionPosition, ElectionCandidate, AnonymousElectionVote,
+    Department, Huel, HuelRating, HuelComment,
     DepartmentClub, DepartmentClubVote, DepartmentClubComment,
     UserProfile
 )
@@ -175,32 +175,7 @@ class Command(BaseCommand):
                 self.stdout.write(f'Created position: {pos.name}')
         
         # Create candidates
-        candidates_data = [
-            {
-                'name': 'Ahaan Khurana',
-                'position': 'President',
-                'party': 'Progressive Alliance',
-                'manifesto': 'Working towards better infrastructure and student facilities.',
-                'agenda': ['Better hostel facilities', 'Improved mess food', 'More recreational activities'],
-                'vote_count': 0,
-            },
-            {
-                'name': 'Rival Candidate',
-                'position': 'President',
-                'party': 'Student First',
-                'manifesto': 'Focusing on academic excellence and career development.',
-                'agenda': ['Better placement support', 'More industry connections', 'Academic reforms'],
-                'vote_count': 0,
-            },
-            {
-                'name': 'Sarah Johnson',
-                'position': 'General Secretary',
-                'party': 'Progressive Alliance',
-                'manifesto': 'Enhancing student experience and campus life.',
-                'agenda': ['More student events', 'Better communication', 'Student welfare'],
-                'vote_count': 0,
-            },
-        ]
+        candidates_data = []
         
         for cand_data in candidates_data:
             cand, created = ElectionCandidate.objects.get_or_create(
