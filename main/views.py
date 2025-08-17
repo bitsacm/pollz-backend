@@ -688,6 +688,13 @@ def github_contributors(request):
         if hasattr(settings, 'GITHUB_TOKEN') and settings.GITHUB_TOKEN:
             headers['Authorization'] = f'token {settings.GITHUB_TOKEN}'
         
+        # Define the actual project creators (the 3 original founders)
+        # These are the GitHub usernames of the original project creators
+        PROJECT_CREATORS = [
+            'madmecodes',  # Madme - as mentioned in the story
+            # Add the other 2 creators' GitHub usernames here when known
+        ]
+        
         # GitHub organization and repositories
         github_org = "bitsacm"
         repositories = {
@@ -740,11 +747,10 @@ def github_contributors(request):
                             display_name = username
                             avatar_url = f"https://github.com/{username}.png"
                         
-                        # Initialize contributor data if not exists
-                        if username not in contributors_data:
-                            contributors_data[username]['name'] = display_name
-                            contributors_data[username]['username'] = username
-                            contributors_data[username]['avatar_url'] = avatar_url
+                        # Initialize contributor data (always update with latest info)
+                        contributors_data[username]['name'] = display_name
+                        contributors_data[username]['username'] = username
+                        contributors_data[username]['avatar_url'] = avatar_url
                         
                         # Add contribution data
                         contributors_data[username]['contributions'][repo_type]['commits'] = contributions_count
@@ -771,8 +777,8 @@ def github_contributors(request):
                                         repo_info = repo_response.json()
                                         repo_owner = repo_info.get('owner', {}).get('login', '')
                                         
-                                        # If they are the repo owner or have significant commits, mark as creator
-                                        if username == repo_owner or len(commits) >= 1:
+                                        # Mark the actual project creators
+                                        if username in PROJECT_CREATORS:
                                             contributors_data[username][f'is_{repo_type}_creator'] = True
                             
                             # Get line count statistics
