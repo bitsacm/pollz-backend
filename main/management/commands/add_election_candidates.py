@@ -83,7 +83,7 @@ class Command(BaseCommand):
                 'image': 'https://ui-avatars.com/api/?name=Anuj+Wagh&background=FFC107&color=000'
             },
             {
-                'name': 'Priyadarshi Rishabh',
+                'name': 'Aditya Khandelwal',
                 'party': 'Student First',
                 'manifesto': 'Committed to academic reforms, examination transparency, and creating better learning environments for all.',
                 'agenda': [
