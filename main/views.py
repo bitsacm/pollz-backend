@@ -685,6 +685,519 @@ Since it's open source, there's endless room for creativity and innovation for f
         return Response({"error": str(e)}, status=500)
 
 @api_view(["GET"])
+def github_contributors_basic(request):
+    """Get basic GitHub contributor info (names, avatars) - lightweight and fast"""
+    try:
+        import json
+        from collections import defaultdict
+        from django.conf import settings
+        
+        # GitHub API authentication headers
+        headers = {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'POLLZ-Contributors-App'
+        }
+        
+        # Add authentication if token is available
+        if hasattr(settings, 'GITHUB_TOKEN') and settings.GITHUB_TOKEN:
+            headers['Authorization'] = f'token {settings.GITHUB_TOKEN}'
+        
+        # Define the actual project creators
+        PROJECT_CREATORS = ['madmecodes']
+        
+        # GitHub organization and repositories
+        github_org = "bitsacm"
+        repositories = {
+            'backend': 'pollz-backend',
+            'frontend': 'pollz-frontend', 
+            'websocket': 'pollz-websocket'
+        }
+        
+        contributors_list = []
+        seen_users = set()
+        
+        # Fetch only basic contributor info from each repository
+        for repo_type, repo_name in repositories.items():
+            try:
+                contributors_url = f"https://api.github.com/repos/{github_org}/{repo_name}/contributors?per_page=100"
+                contributors_response = requests.get(contributors_url, headers=headers)
+                
+                if contributors_response.status_code == 200:
+                    contributors = contributors_response.json()
+                    
+                    for contributor in contributors:
+                        username = contributor.get('login', '')
+                        
+                        # Skip if we've already processed this user
+                        if username in seen_users:
+                            continue
+                        seen_users.add(username)
+                        
+                        # Basic info only - no additional API calls!
+                        contributor_data = {
+                            'username': username,
+                            'avatar_url': contributor.get('avatar_url', ''),
+                            'name': username,  # Will be updated if user fetches details
+                            'contributions_count': contributor.get('contributions', 0),
+                            'is_creator': username in PROJECT_CREATORS,
+                            'github_url': f"https://github.com/{username}",
+                            'has_details_loaded': False
+                        }
+                        
+                        contributors_list.append(contributor_data)
+                        
+            except Exception as e:
+                print(f"Error processing {repo_type}: {e}")
+                continue
+        
+        # Sort by contribution count
+        contributors_list.sort(key=lambda x: x['contributions_count'], reverse=True)
+        
+        # Add ranking
+        for i, contributor in enumerate(contributors_list):
+            contributor['rank'] = i + 1
+        
+        # Separate creators
+        creators = [c for c in contributors_list if c['is_creator']]
+        regular_contributors = [c for c in contributors_list if not c['is_creator']]
+        
+        return Response({
+            'contributors': contributors_list,
+            'creators': creators,
+            'regular_contributors': regular_contributors,
+            'total_contributors': len(contributors_list),
+            'load_time': 'fast',
+            'details_available': False
+        })
+        
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["GET"])
+def github_contributors_commits(request):
+    """Get commit counts for specific contributors - fastest stat to load"""
+    try:
+        import requests
+        from django.conf import settings
+        
+        usernames = request.GET.getlist('username')
+        if not usernames:
+            return Response({"error": "No usernames provided"}, status=400)
+        
+        usernames = usernames[:10]
+        
+        headers = {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'POLLZ-Contributors-App'
+        }
+        
+        if hasattr(settings, 'GITHUB_TOKEN') and settings.GITHUB_TOKEN:
+            headers['Authorization'] = f'token {settings.GITHUB_TOKEN}'
+        
+        github_org = "bitsacm"
+        repositories = {
+            'backend': 'pollz-backend',
+            'frontend': 'pollz-frontend', 
+            'websocket': 'pollz-websocket'
+        }
+        
+        # Cache contributor lists to avoid redundant API calls
+        repo_contributors = {}
+        
+        results = {}
+        
+        for username in usernames:
+            user_data = {
+                'username': username,
+                'total_commits': 0,
+                'contributions': {
+                    'backend': {'commits': 0},
+                    'frontend': {'commits': 0},
+                    'websocket': {'commits': 0}
+                }
+            }
+            
+            print(f"Processing commits for user: {username}")
+            
+            # Get commit counts from contributor lists
+            for repo_type, repo_name in repositories.items():
+                # Use cached data if available
+                if repo_name not in repo_contributors:
+                    contributors_url = f"https://api.github.com/repos/{github_org}/{repo_name}/contributors?per_page=100"
+                    response = requests.get(contributors_url, headers=headers)
+                    
+                    if response.status_code == 200:
+                        repo_contributors[repo_name] = response.json()
+                        print(f"Fetched {len(repo_contributors[repo_name])} contributors for {repo_name}")
+                    else:
+                        print(f"Failed to fetch contributors for {repo_name}: {response.status_code}")
+                        repo_contributors[repo_name] = []
+                
+                # Find user in this repo's contributors
+                contributors = repo_contributors.get(repo_name, [])
+                user_found = False
+                for contributor in contributors:
+                    if contributor.get('login') == username:
+                        commits = contributor.get('contributions', 0)
+                        user_data['contributions'][repo_type]['commits'] = commits
+                        user_data['total_commits'] += commits
+                        user_found = True
+                        print(f"  {repo_type}: {commits} commits")
+                        break
+                
+                if not user_found:
+                    print(f"  {repo_type}: 0 commits (user not found)")
+            
+            print(f"Total commits for {username}: {user_data['total_commits']}")
+            results[username] = user_data
+        
+        return Response({
+            'stat_type': 'commits',
+            'details': results,
+            'debug_info': f"Processed {len(usernames)} users across {len(repositories)} repositories"
+        })
+        
+    except Exception as e:
+        print(f"Error in github_contributors_commits: {str(e)}")
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["GET"])
+def github_contributors_lines(request):
+    """Get line addition/deletion stats for specific contributors"""
+    try:
+        from django.conf import settings
+        
+        usernames = request.GET.getlist('username')
+        if not usernames:
+            return Response({"error": "No usernames provided"}, status=400)
+        
+        usernames = usernames[:10]
+        
+        headers = {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'POLLZ-Contributors-App'
+        }
+        
+        if hasattr(settings, 'GITHUB_TOKEN') and settings.GITHUB_TOKEN:
+            headers['Authorization'] = f'token {settings.GITHUB_TOKEN}'
+        
+        github_org = "bitsacm"
+        repositories = {
+            'backend': 'pollz-backend',
+            'frontend': 'pollz-frontend', 
+            'websocket': 'pollz-websocket'
+        }
+        
+        results = {}
+        
+        for username in usernames:
+            user_data = {
+                'username': username,
+                'total_additions': 0,
+                'total_deletions': 0,
+                'contributions': {
+                    'backend': {'additions': 0, 'deletions': 0},
+                    'frontend': {'additions': 0, 'deletions': 0},
+                    'websocket': {'additions': 0, 'deletions': 0}
+                }
+            }
+            
+            # Get line stats from GitHub stats API
+            for repo_type, repo_name in repositories.items():
+                stats_url = f"https://api.github.com/repos/{github_org}/{repo_name}/stats/contributors"
+                response = requests.get(stats_url, headers=headers)
+                
+                if response.status_code == 200:
+                    stats_data = response.json()
+                    for contributor_stats in stats_data:
+                        if contributor_stats.get('author', {}).get('login') == username:
+                            additions = 0
+                            deletions = 0
+                            
+                            for week in contributor_stats.get('weeks', []):
+                                additions += week.get('a', 0)
+                                deletions += week.get('d', 0)
+                            
+                            user_data['contributions'][repo_type]['additions'] = additions
+                            user_data['contributions'][repo_type]['deletions'] = deletions
+                            user_data['total_additions'] += additions
+                            user_data['total_deletions'] += deletions
+                            break
+            
+            results[username] = user_data
+        
+        return Response({
+            'stat_type': 'lines',
+            'details': results
+        })
+        
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["GET"])
+def github_contributors_prs(request):
+    """Get pull request stats for specific contributors"""
+    try:
+        import requests
+        from django.conf import settings
+        
+        usernames = request.GET.getlist('username')
+        if not usernames:
+            return Response({"error": "No usernames provided"}, status=400)
+        
+        usernames = usernames[:10]
+        
+        headers = {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'POLLZ-Contributors-App'
+        }
+        
+        if hasattr(settings, 'GITHUB_TOKEN') and settings.GITHUB_TOKEN:
+            headers['Authorization'] = f'token {settings.GITHUB_TOKEN}'
+        
+        github_org = "bitsacm"
+        repositories = {
+            'backend': 'pollz-backend',
+            'frontend': 'pollz-frontend', 
+            'websocket': 'pollz-websocket'
+        }
+        
+        results = {}
+        
+        for username in usernames:
+            user_data = {
+                'username': username,
+                'total_merged_prs': 0,
+                'contributions': {
+                    'backend': {'merged_prs': 0},
+                    'frontend': {'merged_prs': 0},
+                    'websocket': {'merged_prs': 0}
+                }
+            }
+            
+            print(f"Processing PRs for user: {username}")
+            
+            # Get PR counts for each repository
+            for repo_type, repo_name in repositories.items():
+                prs_url = f"https://api.github.com/repos/{github_org}/{repo_name}/pulls?author={username}&state=closed&per_page=30"
+                response = requests.get(prs_url, headers=headers)
+                
+                if response.status_code == 200:
+                    prs = response.json()
+                    # Detailed logging to debug the suspicious data
+                    all_prs_count = len(prs)
+                    merged_prs = [pr for pr in prs if pr.get('merged_at') is not None]
+                    merged_count = len(merged_prs)
+                    
+                    print(f"  {repo_type}: {all_prs_count} total PRs, {merged_count} merged")
+                    
+                    # Log some PR details for debugging
+                    if merged_prs:
+                        for pr in merged_prs[:3]:  # Log first 3 merged PRs
+                            print(f"    PR #{pr.get('number')}: '{pr.get('title', 'No title')[:50]}...' merged at {pr.get('merged_at')}")
+                    
+                    user_data['contributions'][repo_type]['merged_prs'] = merged_count
+                    user_data['total_merged_prs'] += merged_count
+                    
+                elif response.status_code == 404:
+                    print(f"  {repo_type}: Repository not found (404)")
+                else:
+                    print(f"  {repo_type}: API error {response.status_code}")
+                    print(f"    Response: {response.text[:200]}")
+            
+            print(f"Total merged PRs for {username}: {user_data['total_merged_prs']}")
+            results[username] = user_data
+        
+        return Response({
+            'stat_type': 'prs',
+            'details': results,
+            'debug_info': f"Processed {len(usernames)} users across {len(repositories)} repositories"
+        })
+        
+    except Exception as e:
+        print(f"Error in github_contributors_prs: {str(e)}")
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["GET"])
+def debug_contributor(request):
+    """Debug endpoint to check individual contributor data"""
+    try:
+        import requests
+        from django.conf import settings
+        
+        username = request.GET.get('username')
+        if not username:
+            return Response({"error": "Username parameter required"}, status=400)
+        
+        headers = {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'POLLZ-Contributors-App'
+        }
+        
+        if hasattr(settings, 'GITHUB_TOKEN') and settings.GITHUB_TOKEN:
+            headers['Authorization'] = f'token {settings.GITHUB_TOKEN}'
+        
+        github_org = "bitsacm"
+        repositories = {
+            'backend': 'pollz-backend',
+            'frontend': 'pollz-frontend', 
+            'websocket': 'pollz-websocket'
+        }
+        
+        debug_info = {
+            'username': username,
+            'repositories': {}
+        }
+        
+        for repo_type, repo_name in repositories.items():
+            repo_debug = {
+                'repo_name': repo_name,
+                'contributor_info': None,
+                'prs': [],
+                'stats': None
+            }
+            
+            # Check if user is in contributors list
+            contributors_url = f"https://api.github.com/repos/{github_org}/{repo_name}/contributors?per_page=100"
+            response = requests.get(contributors_url, headers=headers)
+            
+            if response.status_code == 200:
+                contributors = response.json()
+                for contributor in contributors:
+                    if contributor.get('login') == username:
+                        repo_debug['contributor_info'] = {
+                            'login': contributor.get('login'),
+                            'contributions': contributor.get('contributions'),
+                            'avatar_url': contributor.get('avatar_url')
+                        }
+                        break
+            
+            # Check PRs
+            prs_url = f"https://api.github.com/repos/{github_org}/{repo_name}/pulls?author={username}&state=all&per_page=10"
+            response = requests.get(prs_url, headers=headers)
+            
+            if response.status_code == 200:
+                prs = response.json()
+                for pr in prs:
+                    repo_debug['prs'].append({
+                        'number': pr.get('number'),
+                        'title': pr.get('title'),
+                        'state': pr.get('state'),
+                        'merged_at': pr.get('merged_at'),
+                        'created_at': pr.get('created_at')
+                    })
+            
+            debug_info['repositories'][repo_type] = repo_debug
+        
+        return Response(debug_info)
+        
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["GET"])
+def github_contributors_details(request):
+    """Get detailed stats for specific contributors - called after basic info loads"""
+    try:
+        import json
+        from django.conf import settings
+        
+        # Get username parameter
+        usernames = request.GET.getlist('username')
+        if not usernames:
+            return Response({"error": "No usernames provided"}, status=400)
+        
+        # Limit to prevent abuse
+        usernames = usernames[:10]
+        
+        # GitHub API authentication headers
+        headers = {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'POLLZ-Contributors-App'
+        }
+        
+        if hasattr(settings, 'GITHUB_TOKEN') and settings.GITHUB_TOKEN:
+            headers['Authorization'] = f'token {settings.GITHUB_TOKEN}'
+        
+        github_org = "bitsacm"
+        repositories = {
+            'backend': 'pollz-backend',
+            'frontend': 'pollz-frontend', 
+            'websocket': 'pollz-websocket'
+        }
+        
+        results = {}
+        
+        for username in usernames:
+            user_data = {
+                'username': username,
+                'name': username,
+                'contributions': {
+                    'backend': {'commits': 0, 'additions': 0, 'deletions': 0, 'merged_prs': 0},
+                    'frontend': {'commits': 0, 'additions': 0, 'deletions': 0, 'merged_prs': 0},
+                    'websocket': {'commits': 0, 'additions': 0, 'deletions': 0, 'merged_prs': 0}
+                },
+                'total_commits': 0,
+                'total_additions': 0,
+                'total_deletions': 0,
+                'total_merged_prs': 0
+            }
+            
+            # Get user's real name
+            user_url = f"https://api.github.com/users/{username}"
+            user_response = requests.get(user_url, headers=headers)
+            if user_response.status_code == 200:
+                user_info = user_response.json()
+                user_data['name'] = user_info.get('name') or username
+                user_data['email'] = user_info.get('email', '')
+            
+            # Get stats for each repository
+            for repo_type, repo_name in repositories.items():
+                # Get contributor stats (efficient for lines of code)
+                stats_url = f"https://api.github.com/repos/{github_org}/{repo_name}/stats/contributors"
+                stats_response = requests.get(stats_url, headers=headers)
+                
+                if stats_response.status_code == 200:
+                    stats_data = stats_response.json()
+                    for contributor_stats in stats_data:
+                        if contributor_stats.get('author', {}).get('login') == username:
+                            total_commits = contributor_stats.get('total', 0)
+                            additions = 0
+                            deletions = 0
+                            
+                            for week in contributor_stats.get('weeks', []):
+                                additions += week.get('a', 0)
+                                deletions += week.get('d', 0)
+                            
+                            user_data['contributions'][repo_type]['commits'] = total_commits
+                            user_data['contributions'][repo_type]['additions'] = additions
+                            user_data['contributions'][repo_type]['deletions'] = deletions
+                            user_data['total_commits'] += total_commits
+                            user_data['total_additions'] += additions
+                            user_data['total_deletions'] += deletions
+                            break
+                
+                # Get merged PRs count (limit to recent 30 for speed)
+                prs_url = f"https://api.github.com/repos/{github_org}/{repo_name}/pulls?author={username}&state=closed&per_page=30"
+                prs_response = requests.get(prs_url, headers=headers)
+                
+                if prs_response.status_code == 200:
+                    prs = prs_response.json()
+                    merged_prs = len([pr for pr in prs if pr.get('merged_at')])
+                    user_data['contributions'][repo_type]['merged_prs'] = merged_prs
+                    user_data['total_merged_prs'] += merged_prs
+            
+            results[username] = user_data
+        
+        return Response({
+            'details': results,
+            'requested_count': len(usernames),
+            'returned_count': len(results)
+        })
+        
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["GET"])
 def github_contributors(request):
     """Get GitHub contributors for all repositories using GitHub API"""
     try:
@@ -909,16 +1422,15 @@ def github_contributors(request):
                              data.get('is_frontend_creator', False) or 
                              data.get('is_websocket_creator', False))
                 
-                # Improved ranking algorithm - lines of code weighted much higher
+                # Simplified ranking algorithm - focus on actual code contribution
                 # Lines of code are the main indicator of contribution value
-                lines_score = total_lines * 0.1  # Much higher weight for lines
-                commits_score = data['total_commits'] * 1  # Lower weight for commits
-                prs_score = data['total_merged_prs'] * 3
+                lines_score = total_lines * 0.1  # Main weight for lines added/deleted
+                commits_score = data['total_commits'] * 1  # Weight for commits
                 
                 # Bonus for repository creators
                 creator_bonus = 100 if is_creator else 0
                 
-                score = lines_score + commits_score + prs_score + creator_bonus
+                score = lines_score + commits_score + creator_bonus
                 
                 contributor_data = {
                     'name': data['name'],
@@ -929,7 +1441,6 @@ def github_contributors(request):
                     'total_additions': data['total_additions'],
                     'total_deletions': data['total_deletions'],
                     'total_lines_changed': total_lines,
-                    'total_merged_prs': data['total_merged_prs'],
                     'score': score,
                     'github_url': f"https://github.com/{username}",
                     'is_creator': is_creator,

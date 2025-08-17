@@ -34,6 +34,11 @@ urlpatterns = [
     # ========== CONTRIBUTIONS ==========
     path('contributions/project-info/', views.project_info, name='project_info'),
     path('contributions/github-contributors/', views.github_contributors, name='github_contributors'),
+    path('contributions/github-contributors-basic/', views.github_contributors_basic, name='github_contributors_basic'),
+    path('contributions/github-contributors-details/', views.github_contributors_details, name='github_contributors_details'),
+    path('contributions/github-contributors-commits/', views.github_contributors_commits, name='github_contributors_commits'),
+    path('contributions/github-contributors-lines/', views.github_contributors_lines, name='github_contributors_lines'),
+    path('contributions/debug-contributor/', views.debug_contributor, name='debug_contributor'),
     
     # ========== LEGACY ENDPOINTS (for backward compatibility) ==========
     path('gensec_vote/', views.cast_anonymous_election_vote, name='gensec_vote_legacy'),  # Redirect to anonymous voting
