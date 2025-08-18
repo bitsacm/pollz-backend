@@ -31,7 +31,14 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "7ef3-103-144-93-205.ngrok-free.app","pollz.live", "www.pollz.live"]
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'fb788110f29a.ngrok-free.app',  # Add your current ngrok domain
+    '*.ngrok-free.app',  # Or use wildcard for any ngrok subdomain
+    'pollz.live',
+    'www.pollz.live'
+]
 CSRF_TRUSTED_ORIGINS = ["https://pollz.live", "http://pollz.live"]
 
 CORS_ALLOW_CREDENTIALS = False
