@@ -141,3 +141,53 @@ docker-compose down
 We ❤️ contributions!
 
 If you’d like to contribute, please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+## Troubleshooting
+
+### Database Collation Version Mismatch Warning
+
+When starting the services with `docker-compose up`, you may see a warning in the logs like this:
+`WARNING: database "template1" has a collation version mismatch`
+
+This happens if the Docker image for PostgreSQL has been updated with a newer version of its operating system libraries since the database was first created.
+
+**To fix this**, you need to connect to the running database container and refresh the collation version.
+
+1.  Start the database service in the background:
+    ```bash command
+    docker-compose up -d db
+    ```
+
+2.  Find your database username in the `.env` file (the value of `POSTGRES_USER=`).
+
+3.  Connect to the PostgreSQL prompt inside the container, replacing `your_username` with the actual username:
+    ```bash
+    docker-compose exec db psql -U your_username -d pollz_db
+    ```
+
+4.  Run the following SQL commands one by one:
+    ```sql
+    REINDEX DATABASE pollz_db;
+
+    ALTER DATABASE pollz_db REFRESH COLLATION VERSION;
+
+    UPDATE pg_database SET datallowconn = true WHERE datname = 'template0';
+    \c template0 '(\c = to connect)'
+
+    ALTER DATABASE template0 REFRESH COLLATION VERSION;
+    \c template1
+
+    ALTER DATABASE template1 REFRESH COLLATION VERSION;
+
+    UPDATE pg_database SET datallowconn = false WHERE datname = 'template0';
+
+    \q '(to quit)'
+    ```
+
+5.  You can now restart all services. The warning should be gone.
+    ```bash
+    docker-compose down
+    docker-compose up
+
+    'Now, carefully watch the startup logs in your terminal. WARNING: database ... has a collation version mismatch message should no longer appear. If its gone, you have successfully fixed the issue!'
+    ```
