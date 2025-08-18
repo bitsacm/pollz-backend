@@ -70,7 +70,7 @@ def google_login(request):
         except ValueError as e:
             return Response({"error": "Token not verified with Google"}, status=status.HTTP_400_BAD_REQUEST)
 
-        allowed_domain = "pilani.bits-pilani.ac.in"
+        allowed_domain = settings.ALLOWED_EMAIL_DOMAIN
         
         # Check the 'hd' (hosted domain) claim
         hosted_domain = id_info.get("hd")
