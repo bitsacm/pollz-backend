@@ -1,11 +1,76 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
-    ElectionPosition, ElectionCandidate, AnonymousElectionVote,
+    VotingSession, ElectionPosition, ElectionCandidate, AnonymousElectionVote,
     Department, Huel, HuelRating, HuelComment,
     DepartmentClub, DepartmentClubVote, DepartmentClubComment,
     UserProfile
 )
+
+# ========== VOTING CONTROL ADMIN ==========
+
+@admin.register(VotingSession)
+class VotingSessionAdmin(admin.ModelAdmin):
+    list_display = [
+        'name', 'voting_type', 'status_display', 'is_active', 
+        'voting_start_time', 'voting_end_time', 'created_at'
+    ]
+    list_filter = ['voting_type', 'is_active', 'created_at']
+    search_fields = ['name']
+    readonly_fields = ['created_at', 'updated_at', 'created_by']
+    
+    fieldsets = [
+        ('Basic Information', {
+            'fields': ['name', 'voting_type', 'is_active']
+        }),
+        ('Time Control', {
+            'fields': ['voting_start_time', 'voting_end_time'],
+            'description': 'Leave empty for manual control via "is_active" toggle'
+        }),
+        ('User Messages', {
+            'fields': [
+                'message_during_voting', 'message_before_start', 
+                'message_after_end', 'message_inactive'
+            ],
+            'classes': ['collapse']
+        }),
+        ('Metadata', {
+            'fields': ['created_at', 'updated_at', 'created_by'],
+            'classes': ['collapse']
+        })
+    ]
+    
+    actions = ['activate_voting', 'deactivate_voting']
+    
+    def status_display(self, obj):
+        status, message = obj.get_current_status()
+        colors = {
+            'active': 'green',
+            'not_started': 'orange', 
+            'ended': 'red',
+            'inactive': 'gray'
+        }
+        return format_html(
+            '<span style="color: {};">{}</span>',
+            colors.get(status, 'black'),
+            status.title().replace('_', ' ')
+        )
+    status_display.short_description = 'Current Status'
+    
+    def activate_voting(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'{updated} voting session(s) activated.')
+    activate_voting.short_description = 'Activate selected voting sessions'
+    
+    def deactivate_voting(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} voting session(s) deactivated.')
+    deactivate_voting.short_description = 'Deactivate selected voting sessions'
+    
+    def save_model(self, request, obj, form, change):
+        if not change:  # Only set created_by for new objects
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 # ========== USER PROFILE ADMIN ==========
 

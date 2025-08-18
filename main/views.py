@@ -16,7 +16,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
 from .models import (
-    ElectionPosition, ElectionCandidate, AnonymousElectionVote,
+    VotingSession, ElectionPosition, ElectionCandidate, AnonymousElectionVote,
     Department, Huel, HuelRating, HuelComment,
     DepartmentClub, DepartmentClubVote, DepartmentClubComment,
     UserProfile
