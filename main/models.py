@@ -6,6 +6,66 @@ import secrets
 
 # ========== ELECTION MODELS ==========
 
+class VotingSession(models.Model):
+    """
+    Controls when voting is active for different types of elections
+    """
+    VOTING_TYPE_CHOICES = [
+        ('su_election', 'SU Election'),
+        ('huel_voting', 'HUEL Voting'),
+        ('department_club', 'Department/Club Voting'),
+    ]
+    
+    name = models.CharField(max_length=200)  # e.g., "SU Election 2024", "HUEL Rating Period"
+    voting_type = models.CharField(max_length=20, choices=VOTING_TYPE_CHOICES)
+    
+    # Voting window control
+    is_active = models.BooleanField(default=False)
+    voting_start_time = models.DateTimeField(null=True, blank=True)
+    voting_end_time = models.DateTimeField(null=True, blank=True)
+    
+    # Admin messages displayed to users
+    message_before_start = models.TextField(default="Voting hasn't started yet. Please check back later.")
+    message_during_voting = models.TextField(default="Voting is now active! Cast your vote below.")
+    message_after_end = models.TextField(default="Voting has ended. Thank you for participating!")
+    message_inactive = models.TextField(default="Voting is currently disabled by administrators.")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        unique_together = ['voting_type']  # One active session per voting type
+
+    def __str__(self):
+        return f"{self.name} ({'Active' if self.is_active else 'Inactive'})"
+
+    def get_current_status(self):
+        """
+        Returns current voting status and appropriate message
+        Returns: tuple (status, message)
+        Status can be: 'not_started', 'active', 'ended', 'inactive'
+        """
+        from django.utils import timezone
+        now = timezone.now()
+        
+        if not self.is_active:
+            return ('inactive', self.message_inactive)
+        
+        if self.voting_start_time and now < self.voting_start_time:
+            return ('not_started', self.message_before_start)
+        
+        if self.voting_end_time and now > self.voting_end_time:
+            return ('ended', self.message_after_end)
+        
+        return ('active', self.message_during_voting)
+    
+    def is_voting_allowed(self):
+        """Check if voting is currently allowed"""
+        status, _ = self.get_current_status()
+        return status == 'active'
+
 class ElectionPosition(models.Model):
     name = models.CharField(max_length=100, unique=True)  # President, General Secretary, etc.
     description = models.TextField(blank=True)

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import voting_control_views
 
 urlpatterns = [
     # ========== AUTHENTICATION ==========
@@ -26,6 +27,10 @@ urlpatterns = [
     path('departments-clubs/', views.department_clubs, name='department_clubs'),
     path('departments-clubs/vote/', views.vote_department_club, name='vote_department_club'),
     path('departments-clubs/comment/', views.comment_department_club, name='comment_department_club'),
+    
+    # ========== VOTING CONTROL ==========
+    path('voting/status/<str:voting_type>/', voting_control_views.get_voting_status, name='get_voting_status'),
+    path('voting/status/', voting_control_views.get_all_voting_statuses, name='get_all_voting_statuses'),
     
     # ========== STATISTICS ==========
     path('stats/', views.voting_stats, name='voting_stats'),
