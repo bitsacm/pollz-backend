@@ -1,10 +1,21 @@
 # Contributing to Pollz Backend
 
+## Claiming an Issue 🙋
+To prevent duplicate work and ensure a smooth workflow, please claim an issue before you start working on it.
+
+1.  Find an issue you'd like to work on.
+2.  Comment **`assign to me`** on the issue.
+3.  A maintainer will assign the issue to you. Please wait for the assignment before you begin development. Pull requests for issues that were not assigned to the author may not be considered.
+
+***
+
 ## Setup
 1. Fork the repository
 2. Clone your fork: `git clone <your-fork-url>`
 3. Create `.env` from `.env.example`
 4. Run: `docker-compose up --build`
+
+***
 
 ## Development Workflow
 1. Create feature branch: `git checkout -b feature/your-feature`
@@ -14,6 +25,8 @@
 5. Commit with clear message
 6. Push and create PR (see PR Guidelines below)
 
+***
+
 ## Code Standards
 - Follow PEP 8 style guide
 - Add docstrings to functions/classes
@@ -21,12 +34,16 @@
 - Use meaningful variable names
 - Keep functions focused and small
 
+***
+
 ## Before Submitting PR
 - [ ] Tests pass
 - [ ] No hardcoded credentials
 - [ ] Database migrations included
 - [ ] Requirements.txt updated if needed
 - [ ] Code follows Django best practices
+
+***
 
 ## GitHub PR Guidelines
 
@@ -60,6 +77,8 @@ Use conventional commit format: `type(scope): description`
 - `fix/bug-description` - Bug fixes
 - `docs/documentation-update` - Documentation
 - `refactor/component-name` - Refactoring
+
+***
 
 ## Project Structure
 - `main/` - Core voting functionality
