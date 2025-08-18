@@ -5,4 +5,4 @@ python manage.py makemigrations --noinput
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 echo starting gunicorn
-gunicorn -c gunicorn_conf.py pollz.wsgi:application --bind 0.0.0.0:8000
+python manage.py runserver 0.0.0.0:8000
