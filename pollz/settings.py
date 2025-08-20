@@ -31,13 +31,14 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "7ef3-103-144-93-205.ngrok-free.app","pollz.live", "www.pollz.live"]
-CSRF_TRUSTED_ORIGINS = ["https://pollz.live", "http://pollz.live"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "7ef3-103-144-93-205.ngrok-free.app","pollz.bits-acm.in"]
+CSRF_TRUSTED_ORIGINS = ["https://pollz.bits-acm.in", "http://pollz.bits-acm.in"]
 
 CORS_ALLOW_CREDENTIALS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://pollz.bits-acm.in"
 ]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = False
