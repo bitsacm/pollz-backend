@@ -70,20 +70,18 @@ def google_login(request):
         except ValueError as e:
             return Response({"error": "Token not verified with Google"}, status=status.HTTP_400_BAD_REQUEST)
 
+        email = id_info.get("email")
+        first_name = id_info.get("given_name", "")
+        last_name = id_info.get("family_name", "")
+        
         allowed_domain = settings.ALLOWED_EMAIL_DOMAIN
         
-        # Check the 'hd' (hosted domain) claim
-        hosted_domain = id_info.get("hd")
-
-        if hosted_domain != allowed_domain:
+        if email.split("@")[-1] != allowed_domain: 
             return Response({
                 "error": "Access denied. Only BITS Pilani accounts are allowed."
             }, status=status.HTTP_403_FORBIDDEN)
          
         # Extract user profile information directly from the validated token's payload
-        email = id_info.get("email")
-        first_name = id_info.get("given_name", "")
-        last_name = id_info.get("family_name", "")
         
         if not email:
             return Response({"error": "Email not found in token"}, status=status.HTTP_400_BAD_REQUEST)
