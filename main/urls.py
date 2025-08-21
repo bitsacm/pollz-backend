@@ -50,4 +50,7 @@ urlpatterns = [
     path('prez_vote/', views.cast_anonymous_election_vote, name='prez_vote_legacy'),     # Redirect to anonymous voting
     path('candidate-data/', views.election_candidates, name='candidate_data_legacy'),
     path('total-votes/', views.voting_stats, name='total_votes_legacy'),
+
+    # ========== Sentry Debug =============
+    path('sentry_debug/', views.sentry_debug, name='sentry_debug'),
 ]
