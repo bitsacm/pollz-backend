@@ -14,8 +14,23 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 load_dotenv(".env")
+
+# To setup sentry for live error monitoring
+
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),
+    integrations=[
+        DjangoIntegration(),
+    ],
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True, # This gives the info about users too if using django.contrib.auth
+    
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 

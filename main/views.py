@@ -1492,3 +1492,8 @@ def github_contributors(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
+# Debugging if sentry is working as expected
+
+@api_view(["GET"])
+def sentry_debug(request):
+    maths_not_mathing = 1/0

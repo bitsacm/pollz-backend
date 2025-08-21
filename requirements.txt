@@ -13,3 +13,4 @@ razorpay
 psycopg2-binary==2.9.9
 python-dotenv
 google-auth-oauthlib
+sentry-sdk==2.35.0
