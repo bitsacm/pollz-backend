@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import voting_control_views
 
 urlpatterns = [
     # ========== AUTHENTICATION ==========
@@ -27,6 +28,10 @@ urlpatterns = [
     path('departments-clubs/vote/', views.vote_department_club, name='vote_department_club'),
     path('departments-clubs/comment/', views.comment_department_club, name='comment_department_club'),
     
+    # ========== VOTING CONTROL ==========
+    path('voting/status/<str:voting_type>/', voting_control_views.get_voting_status, name='get_voting_status'),
+    path('voting/status/', voting_control_views.get_all_voting_statuses, name='get_all_voting_statuses'),
+    
     # ========== STATISTICS ==========
     path('stats/', views.voting_stats, name='voting_stats'),
     path('stats/dashboard/', views.dashboard_stats, name='dashboard_stats'),
@@ -45,4 +50,7 @@ urlpatterns = [
     path('prez_vote/', views.cast_anonymous_election_vote, name='prez_vote_legacy'),     # Redirect to anonymous voting
     path('candidate-data/', views.election_candidates, name='candidate_data_legacy'),
     path('total-votes/', views.voting_stats, name='total_votes_legacy'),
+
+    # ========== Sentry Debug =============
+    path('sentry_debug/', views.sentry_debug, name='sentry_debug'),
 ]

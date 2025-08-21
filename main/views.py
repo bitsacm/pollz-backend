@@ -16,7 +16,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
 from .models import (
-    ElectionPosition, ElectionCandidate, AnonymousElectionVote,
+    VotingSession, ElectionPosition, ElectionCandidate, AnonymousElectionVote,
     Department, Huel, HuelRating, HuelComment,
     DepartmentClub, DepartmentClubVote, DepartmentClubComment,
     UserProfile
@@ -69,15 +69,22 @@ def google_login(request):
             id_info = id_token.verify_oauth2_token(token, google_requests.Request(), settings.GOOGLE_CLIENT_ID)
         except ValueError as e:
             return Response({"error": "Token not verified with Google"}, status=status.HTTP_400_BAD_REQUEST)
-            
+
+        allowed_domain = settings.ALLOWED_EMAIL_DOMAIN
+        
         # Extract user profile information directly from the validated token's payload
         email = id_info.get("email")
         first_name = id_info.get("given_name", "")
         last_name = id_info.get("family_name", "")
-        
+
         if not email:
             return Response({"error": "Email not found in token"}, status=status.HTTP_400_BAD_REQUEST)
-            
+
+        # check if the email is from allowed domain 
+        if email.split("@")[-1] != allowed_domain:
+            return Response({"error" : "Only BITS Pilani, Pilani Email allowed."}, status=status.HTTP_403_FORBIDDEN)
+         
+        
         # Check if user exists
         try:
             user = User.objects.get(email=email)
@@ -1492,3 +1499,8 @@ def github_contributors(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
+# Debugging if sentry is working as expected
+
+@api_view(["GET"])
+def sentry_debug(request):
+    maths_not_mathing = 1/0

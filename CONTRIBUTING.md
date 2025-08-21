@@ -1,68 +1,60 @@
 # Contributing to Pollz Backend
 
-## Setup
-1. Fork the repository
-2. Clone your fork: `git clone <your-fork-url>`
-3. Create `.env` from `.env.example`
-4. Run: `docker-compose up --build`
+Thanks for your interest in contributing 🎉  
+We welcome contributions of all kinds — from bug fixes and new features to documentation improvements.
 
-## Development Workflow
-1. Create feature branch: `git checkout -b feature/your-feature`
-2. Make changes
-3. Test locally: `docker-compose exec web python manage.py test`
-4. Run migrations if needed: `docker-compose exec web python manage.py migrate`
-5. Commit with clear message
-6. Push and create PR (see PR Guidelines below)
+---
+👉 For environment setup and running the project, see the [README.md](./README.md).
 
-## Code Standards
-- Follow PEP 8 style guide
-- Add docstrings to functions/classes
-- Write tests for new features
-- Use meaningful variable names
-- Keep functions focused and small
+## Getting Started
 
-## Before Submitting PR
-- [ ] Tests pass
-- [ ] No hardcoded credentials
-- [ ] Database migrations included
-- [ ] Requirements.txt updated if needed
-- [ ] Code follows Django best practices
+1. **Fork** the repository on GitHub.
+2. **Clone** your fork locally:
+   ```bash
+   git clone https://github.com/<your-github-username>/pollz-backend.git
+   cd pollz-backend
 
-## GitHub PR Guidelines
+3. **Add upstream remote** to stay updated with the main repo:
 
-### PR Title Format
-Use conventional commit format: `type(scope): description`
+   ```bash
+   git remote add upstream https://github.com/bitsacm/pollz-backend.git
+   git fetch upstream
+   ```
+4. **Create a new branch** for your feature or fix:
 
-**Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
+   ```bash
+   git checkout -b feature/my-new-feature
+   ```
 
-**Examples:**
-- `feat(auth): add Google OAuth login`
-- `fix(voting): resolve duplicate vote issue`
-- `docs(api): update endpoint documentation`
-- `refactor(models): optimize database queries`
+👉 For environment setup and running the project, see the [README.md](./README.md).
 
-### PR Description
-- Clearly describe what changes were made
-- Include screenshots for UI changes
-- Reference related issues using `Fixes #123`
-- List any breaking changes
-- Mention if migrations are included
+---
 
-### Branch Naming
-- `feature/feature-name` - New features
-- `fix/bug-description` - Bug fixes
-- `docs/documentation-update` - Documentation
-- `refactor/component-name` - Refactoring
+## Contribution Guidelines
 
-## Project Structure
-- `main/` - Core voting functionality
-- `superchat/` - Chat/messaging features
-- `pollz/` - Django settings and configuration
-- `manage.py` - Django management commands
+* Keep commits atomic and write clear, descriptive messages.
+* Use `feat:`, `fix:`, `docs:`, `refactor:`, etc. in commit prefixes where appropriate.
+* Avoid committing secrets, credentials, or large files.
+
+---
+
+## Submitting Changes
+
+1. **Commit your work**:
+
+   ```bash
+   git add <file>
+   git commit -m "feat: add new voting API"
+   ```
+
+2. **Push to your fork**:
+
+   ```bash
+   git push origin feature/my-new-feature
+   ```
+
+3. **Open a Pull Request (PR)**:
+
+   * Go to your fork on GitHub and click **Compare & pull request**.
+   * Provide a clear title and description of your changes.
+   * Reference related issues (e.g., `Closes #42`).

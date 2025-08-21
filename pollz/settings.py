@@ -14,8 +14,23 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 load_dotenv(".env")
+
+# To setup sentry for live error monitoring
+
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),
+    integrations=[
+        DjangoIntegration(),
+    ],
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True, # This gives the info about users too if using django.contrib.auth
+    
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
@@ -31,13 +46,14 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "7ef3-103-144-93-205.ngrok-free.app","pollz.live", "www.pollz.live"]
-CSRF_TRUSTED_ORIGINS = ["https://pollz.live", "http://pollz.live"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "7ef3-103-144-93-205.ngrok-free.app","pollz.bits-acm.in"]
+CSRF_TRUSTED_ORIGINS = ["https://pollz.bits-acm.in", "http://pollz.bits-acm.in"]
 
 CORS_ALLOW_CREDENTIALS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://pollz.bits-acm.in"
 ]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = False
@@ -191,3 +207,4 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # Personal Access Token for GitHub API
 
 # Google OAuth Client ID
 GOOGLE_CLIENT_ID = os.getenv("REACT_APP_GOOGLE_CLIENT_ID")
+ALLOWED_EMAIL_DOMAIN = os.getenv("ALLOWED_EMAIL_DOMAIN", "pilani.bits-pilani.ac.in")
