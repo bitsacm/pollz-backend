@@ -69,15 +69,22 @@ def google_login(request):
             id_info = id_token.verify_oauth2_token(token, google_requests.Request(), settings.GOOGLE_CLIENT_ID)
         except ValueError as e:
             return Response({"error": "Token not verified with Google"}, status=status.HTTP_400_BAD_REQUEST)
-            
+
+        allowed_domain = settings.ALLOWED_EMAIL_DOMAIN
+        
         # Extract user profile information directly from the validated token's payload
         email = id_info.get("email")
         first_name = id_info.get("given_name", "")
         last_name = id_info.get("family_name", "")
-        
+
         if not email:
             return Response({"error": "Email not found in token"}, status=status.HTTP_400_BAD_REQUEST)
-            
+
+        # check if the email is from allowed domain 
+        if email.split("@")[-1] != allowed_domain:
+            return Response({"error" : "Only BITS Pilani, Pilani Email allowed."}, status=status.HTTP_403_FORBIDDEN)
+         
+        
         # Check if user exists
         try:
             user = User.objects.get(email=email)
