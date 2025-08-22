@@ -1,0 +1,75 @@
+name: Pollz CI/CD Workflow
+
+
+# Setting triggers for this workflow
+on:
+  pull_request:
+    branches:
+      - main # Pull requests to main branch must be checked and verified
+  push:
+    branches:
+      - main
+
+jobs:
+  health-check-job: # health check job for testing and code formatting check
+    runs-on: ubuntu-latest # os for running the job
+    services:
+      db: # service name changed to `db` so Django settings default HOST 'db' resolves
+        image: postgres
+        env: # the environment variable must match with app/settings.py if block of DATABASES variable otherwise test will fail due to connectivity issue.
+          POSTGRES_USER: pollz_user
+          POSTGRES_PASSWORD: pollz_password
+          POSTGRES_DB: pollz_db
+          POSTGRES_HOST: db
+        ports:
+          - 5432:5432 # exposing 5432 port for application to use
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd "pg_isready -U pollz_user" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Checkout code # checking out the code at current commit that triggers the workflow
+        uses: actions/checkout@v3
+      - name: Cache dependency # caching dependency will make our build faster.
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Setup python environment # setting python environment to 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' # Same version as the one used in Dockerfile
+      - name: Check Python version # checking the python version to see if 3.x is installed.
+        run: python --version
+      - name: Install requirements # install application requirements
+        run: pip install -r requirements.txt
+      - name: Wait for Postgres # wait until Postgres is reachable
+        run: |
+          echo "Waiting for Postgres to be ready on 127.0.0.1:5432..."
+          for i in $(seq 1 30); do
+            if bash -c "echo > /dev/tcp/127.0.0.1/5432" >/dev/null 2>&1; then
+              echo "Postgres is up"
+              exit 0
+            fi
+            echo "Waiting for Postgres ($i/30)..."
+            sleep 1
+          done
+          echo "Postgres did not become ready in time" >&2
+          exit 1
+      # - name: Check Syntax # check code formatting
+      #   run: pip install pycodestyle && pycodestyle --statistics .
+      - name: Django system checks
+        run: python manage.py check
+
+      - name: Check for missing migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Migrate
+        run: python manage.py migrate --noinput
+
+      - name: Collect static (if applicable)
+        run: python manage.py collectstatic --noinput
+        continue-on-error: true
+
+      - name: Run Tests
+        run: python manage.py test

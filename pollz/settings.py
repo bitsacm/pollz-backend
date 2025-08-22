@@ -122,11 +122,11 @@ WSGI_APPLICATION = "pollz.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": "db",
-        "PORT": "5432",
+        'NAME': os.environ.get('POSTGRES_DB',  'pollz_db'),
+        'USER': os.environ.get('POSTGRES_USER','pollz_user'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'pollz_password'),
+        'HOST': os.environ.get('POSTGRES_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
 # Password validation
