@@ -1,0 +1,35 @@
+meta {
+  name: Obtain Token Pair
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/token/
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "username": "user@pilani.bits-pilani.ac.in",
+    "password": "password123"
+  }
+}
+
+docs {
+  Obtains a JWT access and refresh token pair using username/password.
+  
+  Note: This endpoint is typically used for direct authentication.
+  For Google OAuth, use the Google Login endpoint in Authentication section.
+  
+  Request Body:
+  - username: User's email address
+  - password: User's password
+  
+  Returns access token and refresh token for API authentication.
+}

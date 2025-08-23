@@ -1,0 +1,34 @@
+meta {
+  name: Comment on Huel
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/main/huels/comment/
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "huel_id": 1,
+    "comment": "This course was really helpful for understanding programming concepts. The assignments were challenging but fair."
+  }
+}
+
+docs {
+  Submits a comment for a course (Huel).
+  
+  Requirements:
+  - Valid JWT access token in Authorization header
+  
+  Request Body:
+  - huel_id: ID of the course to comment on
+  - comment: Text comment about the course
+}

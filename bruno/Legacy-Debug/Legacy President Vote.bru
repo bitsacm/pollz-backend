@@ -1,0 +1,32 @@
+meta {
+  name: Legacy President Vote
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/main/prez_vote/
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "candidate_id": 1,
+    "position_type": "president"
+  }
+}
+
+docs {
+  Legacy endpoint for President voting.
+  
+  ⚠️ LEGACY: This endpoint redirects to the anonymous voting system.
+  Use "Cast Anonymous Vote" in Elections section instead.
+  
+  This endpoint is maintained for backward compatibility.
+}

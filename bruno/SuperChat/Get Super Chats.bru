@@ -1,0 +1,22 @@
+meta {
+  name: Get Super Chats
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/superchat/get-super-chats/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves all active SuperChat messages.
+  
+  ⚠️ NOTE: This endpoint is currently DISABLED in the backend.
+  
+  Returns SuperChat messages that have been successfully paid for
+  and are not expired, ordered by payment amount (highest first).
+  
+  Used to display live SuperChat messages during streams.
+}

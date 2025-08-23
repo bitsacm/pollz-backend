@@ -1,0 +1,17 @@
+meta {
+  name: Get Department Clubs
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/departments-clubs/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves all department clubs available for voting.
+  
+  Returns a list of department clubs with vote counts and statistics.
+}

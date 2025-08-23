@@ -1,0 +1,17 @@
+meta {
+  name: Get GitHub Contributors Commits
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/contributions/github-contributors-commits/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves GitHub contributor commit statistics.
+  
+  Returns commit-focused metrics for each contributor.
+}

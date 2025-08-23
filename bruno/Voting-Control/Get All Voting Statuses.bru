@@ -1,0 +1,22 @@
+meta {
+  name: Get All Voting Statuses
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/voting/status/
+  body: none
+  auth: none
+}
+
+docs {
+  Gets the voting status for all configured voting types.
+  
+  Returns status information for:
+  - su_election (Student Union elections)
+  - huel_voting (Course voting)
+  - department_club (Department club voting)
+  
+  Each status includes timing information and whether voting is currently allowed.
+}

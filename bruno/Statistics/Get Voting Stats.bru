@@ -1,0 +1,20 @@
+meta {
+  name: Get Voting Stats
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/stats/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves comprehensive voting statistics across all voting categories.
+  
+  Returns statistics for:
+  - Election voting (total votes, participation rates)
+  - Course (Huel) ratings and comments
+  - Department club voting
+}

@@ -1,0 +1,39 @@
+meta {
+  name: Rate Huel
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/main/huels/rate/
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "huel_id": 1,
+    "difficulty": 4,
+    "quality": 5,
+    "usefulness": 4
+  }
+}
+
+docs {
+  Submits a rating for a course (Huel).
+  
+  Requirements:
+  - Valid JWT access token in Authorization header
+  - User must not have already rated this course
+  
+  Request Body:
+  - huel_id: ID of the course to rate
+  - difficulty: Rating for course difficulty (1-5)
+  - quality: Rating for course quality (1-5) 
+  - usefulness: Rating for course usefulness (1-5)
+}

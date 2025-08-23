@@ -1,0 +1,30 @@
+meta {
+  name: Verify Token
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/token/verify/
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "token": "{{auth_token}}"
+  }
+}
+
+docs {
+  Verifies if a JWT token is valid and not expired.
+  
+  Request Body:
+  - token: JWT token to verify (access or refresh token)
+  
+  Returns success if token is valid, error if invalid or expired.
+}

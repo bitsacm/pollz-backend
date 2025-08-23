@@ -1,0 +1,24 @@
+meta {
+  name: User Profile
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/auth/profile/
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+docs {
+  Retrieves the authenticated user's profile information.
+  
+  Requirements:
+  - Valid JWT access token in Authorization header
+  
+  Returns user profile including voting status and Google information.
+}

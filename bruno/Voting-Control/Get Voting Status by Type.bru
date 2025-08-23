@@ -1,0 +1,25 @@
+meta {
+  name: Get Voting Status by Type
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/voting/status/su_election/
+  body: none
+  auth: none
+}
+
+docs {
+  Gets the current voting status for a specific voting type.
+  
+  URL Parameters:
+  - voting_type: Type of voting to check (su_election, huel_voting, department_club)
+  
+  Returns voting session status, timing, and whether voting is currently allowed.
+  
+  Replace 'su_election' in the URL with:
+  - 'su_election' for Student Union elections
+  - 'huel_voting' for course voting
+  - 'department_club' for department club voting
+}

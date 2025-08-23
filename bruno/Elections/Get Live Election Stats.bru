@@ -1,0 +1,17 @@
+meta {
+  name: Get Live Election Stats
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/elections/live-stats/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves live election statistics including real-time vote counts.
+  
+  Returns current voting statistics for all positions and candidates.
+}

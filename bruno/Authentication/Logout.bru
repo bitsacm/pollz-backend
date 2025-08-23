@@ -1,0 +1,30 @@
+meta {
+  name: Logout
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/main/auth/logout/
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "refresh_token": "{{refresh_token}}"
+  }
+}
+
+docs {
+  Logs out a user by invalidating their refresh token.
+  
+  Requirements:
+  - Valid JWT access token in Authorization header
+  - Refresh token in request body
+}

@@ -1,0 +1,20 @@
+meta {
+  name: Legacy Candidate Data
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/candidate-data/
+  body: none
+  auth: none
+}
+
+docs {
+  Legacy endpoint for candidate data.
+  
+  ⚠️ LEGACY: This endpoint redirects to the election candidates endpoint.
+  Use "Get Election Candidates" in Elections section instead.
+  
+  This endpoint is maintained for backward compatibility.
+}

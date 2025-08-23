@@ -1,0 +1,20 @@
+meta {
+  name: Sentry Debug
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/sentry_debug/
+  body: none
+  auth: none
+}
+
+docs {
+  Debug endpoint for testing Sentry error tracking.
+  
+  ⚠️ DEBUG ONLY: This endpoint intentionally triggers an error
+  to test Sentry integration and error monitoring.
+  
+  Should only be used in development or testing environments.
+}

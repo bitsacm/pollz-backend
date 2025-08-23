@@ -1,0 +1,39 @@
+meta {
+  name: Create Order
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/superchat/create-order/
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "amount": 100,
+    "message": "Great live stream! Keep up the good work!"
+  }
+}
+
+docs {
+  Creates a Razorpay payment order for SuperChat.
+  
+  ⚠️ NOTE: This endpoint is currently DISABLED in the backend.
+  
+  Requirements:
+  - Valid JWT access token in Authorization header
+  - Valid Razorpay configuration
+  
+  Request Body:
+  - amount: Payment amount in INR
+  - message: SuperChat message to display
+  
+  Returns Razorpay order details for frontend payment processing.
+}

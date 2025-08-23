@@ -1,0 +1,20 @@
+meta {
+  name: Legacy Total Votes
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/total-votes/
+  body: none
+  auth: none
+}
+
+docs {
+  Legacy endpoint for total votes statistics.
+  
+  ⚠️ LEGACY: This endpoint redirects to the voting stats endpoint.
+  Use "Get Voting Stats" in Statistics section instead.
+  
+  This endpoint is maintained for backward compatibility.
+}

@@ -1,0 +1,46 @@
+meta {
+  name: Razorpay Webhook
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/superchat/razorpay-webhook/
+  body: json
+  auth: none
+}
+
+headers {
+  X-Razorpay-Signature: webhook_signature_here
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "event": "payment.captured",
+    "payload": {
+      "payment": {
+        "entity": {
+          "id": "pay_example123",
+          "order_id": "order_example123",
+          "amount": 10000,
+          "status": "captured"
+        }
+      }
+    }
+  }
+}
+
+docs {
+  Webhook endpoint for Razorpay payment notifications.
+  
+  ⚠️ NOTE: This endpoint is currently DISABLED in the backend.
+  
+  This endpoint is called by Razorpay when payments are processed.
+  It updates the SuperChat payment status and makes the message live.
+  
+  Headers:
+  - X-Razorpay-Signature: Webhook signature for verification
+  
+  Body contains payment event data from Razorpay.
+}
