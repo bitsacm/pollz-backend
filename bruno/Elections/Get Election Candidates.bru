@@ -1,0 +1,17 @@
+meta {
+  name: Get Election Candidates
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/elections/candidates/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves all active election candidates across all positions.
+  
+  Returns candidate details including position, vote counts, and percentages.
+}

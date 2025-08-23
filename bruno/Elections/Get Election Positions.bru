@@ -1,0 +1,17 @@
+meta {
+  name: Get Election Positions
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/elections/positions/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves all active election positions.
+  
+  Returns a list of positions (e.g., President, General Secretary) with candidate counts and total votes.
+}

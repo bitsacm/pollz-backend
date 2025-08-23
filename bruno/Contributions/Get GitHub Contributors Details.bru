@@ -1,0 +1,17 @@
+meta {
+  name: Get GitHub Contributors Details
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/contributions/github-contributors-details/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves detailed GitHub contributor information.
+  
+  Returns comprehensive contributor profiles with detailed statistics.
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Get Candidates by Position
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/elections/candidates-by-position/
+  body: none
+  auth: none
+}
+
+params:query {
+  position_id: 1
+}
+
+docs {
+  Retrieves candidates for a specific election position.
+  
+  Query Parameters:
+  - position_id: ID of the election position
+  
+  Returns candidates grouped by position with vote statistics.
+}

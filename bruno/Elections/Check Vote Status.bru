@@ -1,0 +1,31 @@
+meta {
+  name: Check Vote Status
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/elections/check-vote-status/
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+params:query {
+  position_type: president
+}
+
+docs {
+  Checks if the authenticated user has already voted for a specific position.
+  
+  Requirements:
+  - Valid JWT access token in Authorization header
+  
+  Query Parameters:
+  - position_type: Type of position to check (e.g., "president", "gen_sec")
+  
+  Returns voting status for the user and position.
+}

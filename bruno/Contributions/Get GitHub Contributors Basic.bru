@@ -1,0 +1,17 @@
+meta {
+  name: Get GitHub Contributors Basic
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/contributions/github-contributors-basic/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves basic GitHub contributor information.
+  
+  Returns simplified contributor data with essential information only.
+}

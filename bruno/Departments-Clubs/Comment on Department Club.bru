@@ -1,0 +1,34 @@
+meta {
+  name: Comment on Department Club
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/main/departments-clubs/comment/
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "club_id": 1,
+    "comment": "This club has great activities and helpful members. Highly recommend joining!"
+  }
+}
+
+docs {
+  Submits a comment for a department club.
+  
+  Requirements:
+  - Valid JWT access token in Authorization header
+  
+  Request Body:
+  - club_id: ID of the club to comment on
+  - comment: Text comment about the club
+}

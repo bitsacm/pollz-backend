@@ -1,0 +1,20 @@
+meta {
+  name: Get Huel Detail
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/huels/1/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves detailed information for a specific course (Huel).
+  
+  URL Parameters:
+  - huel_id: ID of the course (replace '1' in URL)
+  
+  Returns course details, ratings, and comments.
+}

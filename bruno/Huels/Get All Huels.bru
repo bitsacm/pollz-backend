@@ -1,0 +1,26 @@
+meta {
+  name: Get All Huels
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/huels/
+  body: none
+  auth: none
+}
+
+params:query {
+  department_id: 1
+  search: programming
+}
+
+docs {
+  Retrieves all courses (Huels) with optional filtering.
+  
+  Query Parameters (optional):
+  - department_id: Filter courses by department
+  - search: Search courses by name or code
+  
+  Returns courses with ratings, comments count, and department information.
+}

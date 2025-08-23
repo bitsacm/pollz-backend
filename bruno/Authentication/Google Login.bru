@@ -1,0 +1,31 @@
+meta {
+  name: Google Login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/main/auth/google-login/
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id_token": "your_google_id_token_here"
+  }
+}
+
+docs {
+  Authenticates a user with a Google ID token. 
+  
+  Requirements:
+  - Valid Google ID token from frontend OAuth flow
+  - Email must be from BITS Pilani domain
+  
+  Response includes JWT access and refresh tokens for subsequent API calls.
+}

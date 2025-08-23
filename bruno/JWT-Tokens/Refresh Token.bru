@@ -1,0 +1,30 @@
+meta {
+  name: Refresh Token
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/token/refresh/
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "refresh": "{{refresh_token}}"
+  }
+}
+
+docs {
+  Refreshes an expired access token using a valid refresh token.
+  
+  Request Body:
+  - refresh: Valid refresh token
+  
+  Returns a new access token for continued API access.
+}

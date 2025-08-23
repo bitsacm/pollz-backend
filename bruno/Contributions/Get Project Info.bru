@@ -1,0 +1,17 @@
+meta {
+  name: Get Project Info
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/contributions/project-info/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves general information about the Pollz project.
+  
+  Returns project metadata and basic information.
+}

@@ -1,0 +1,17 @@
+meta {
+  name: Get GitHub Contributors Lines
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/contributions/github-contributors-lines/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves GitHub contributor lines of code statistics.
+  
+  Returns lines of code metrics (additions/deletions) for each contributor.
+}

@@ -1,0 +1,36 @@
+meta {
+  name: Cast Anonymous Vote
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/main/elections/cast-anonymous-vote/
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "candidate_id": 1,
+    "position_type": "president"
+  }
+}
+
+docs {
+  Casts an anonymous vote for a candidate in an election position.
+  
+  Requirements:
+  - Valid JWT access token in Authorization header
+  - User must not have already voted for this position
+  - Voting must be open for the position
+  
+  Request Body:
+  - candidate_id: ID of the candidate to vote for
+  - position_type: Type of position (e.g., "president", "gen_sec")
+}

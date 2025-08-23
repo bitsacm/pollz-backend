@@ -1,0 +1,17 @@
+meta {
+  name: Get Departments
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/main/huels/departments/
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves all academic departments.
+  
+  Returns a list of departments that offer courses (Huels) for rating.
+}
