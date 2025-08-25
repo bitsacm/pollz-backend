@@ -13,17 +13,14 @@ on:
 jobs:
   health-check-job: # health check job for testing and code formatting check
     runs-on: ubuntu-latest # os for running the job
-    env:
-      SECRET_KEY: 'ci_secret_key_for_tests'
-      JWT_SECRET_KEY: 'ci_jwt_key_for_tests'
     services:
       db: # service name changed to `db` so Django settings default HOST 'db' resolves
         image: postgres
         env: # the environment variable must match with app/settings.py if block of DATABASES variable otherwise test will fail due to connectivity issue.
-          POSTGRES_USER: pollz_user
+          POSTGRES_USER: ${{ env.POSTGRES_USER || 'pollz_user' }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD || 'pollz_password' }}
-          POSTGRES_DB: pollz_db
-          POSTGRES_HOST: db
+          POSTGRES_DB: ${{ env.POSTGRES_DB || 'pollz_db' }}
+          POSTGRES_HOST: ${{ env.POSTGRES_HOST || '127.0.0.1' }}
         ports:
           - 5432:5432 # exposing 5432 port for application to use
         # needed because the postgres container does not provide a healthcheck
