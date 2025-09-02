@@ -22,7 +22,7 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
-*bin/
+bin/
 
 # Backup files
 *.bak
