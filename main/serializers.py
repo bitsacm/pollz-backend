@@ -41,6 +41,7 @@ class ElectionCandidateSerializer(serializers.ModelSerializer):
     position_name = serializers.CharField(source='position.name', read_only=True)
     vote_percentage = serializers.SerializerMethodField()
     user_has_voted = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
     
     def get_vote_percentage(self, obj):
         return obj.get_vote_percentage()
@@ -58,6 +59,14 @@ class ElectionCandidateSerializer(serializers.ModelSerializer):
                 position=obj.position
             ).exists()
         return False
+    
+    def get_image(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
     
     class Meta:
         model = ElectionCandidate
