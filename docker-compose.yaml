@@ -29,6 +29,7 @@ services:
     volumes:
       - .:/app
       - staticfiles:/app/staticfiles
+      - mediafiles:/app/media
   
   nginx:
     container_name: pollz_nginx
@@ -45,3 +46,4 @@ services:
 volumes:
   staticfiles:
   postgres_data:
+  mediafiles:
