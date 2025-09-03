@@ -41,6 +41,7 @@ services:
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - staticfiles:/app/staticfiles
+      - mediafiles:/app/media
     restart: always
 
 volumes:
