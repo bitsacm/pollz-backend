@@ -81,7 +81,7 @@ class ElectionCandidate(models.Model):
     party = models.CharField(max_length=100, blank=True)
     manifesto = models.TextField()
     agenda = models.JSONField(default=list)  # List of agenda items
-    image = models.URLField(blank=True)
+    image = models.ImageField(upload_to='candidates/', blank=True, null=True)
     vote_count = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
