@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-
+from django.db import transaction
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
@@ -170,80 +170,81 @@ def election_candidates(request):
 @permission_classes([IsAuthenticated])
 def cast_anonymous_election_vote(request):
     """Cast an anonymous vote for an election candidate"""
+
     try:
-        candidate_id = request.data.get('candidate_id')
-        if not candidate_id:
-            return Response({"error": "candidate_id is required"}, status=400)
+        with transaction.atomic():
+            candidate_id = request.data.get('candidate_id')
+            if not candidate_id:
+                return Response({"error": "candidate_id is required"}, status=400)
 
-        candidate = get_object_or_404(ElectionCandidate, id=candidate_id, is_active=True)
-        
-        # Create anonymous voter hash
-        voter_hash = AnonymousElectionVote.create_voter_hash(
-            request.user.id, 
-            candidate.position.id
-        )
-        
-        # Check if this anonymous voter already voted for this position
-        existing_vote = AnonymousElectionVote.objects.filter(
-            voter_hash=voter_hash, 
-            position=candidate.position
-        ).first()
-        
-        if existing_vote:
+            candidate = get_object_or_404(ElectionCandidate, id=candidate_id, is_active=True)
+            
+            # Create anonymous voter hash
+            voter_hash = AnonymousElectionVote.create_voter_hash(
+                request.user.id, 
+                candidate.position.id
+            )
+            
+            # Check if this anonymous voter already voted for this position
+            existing_vote = AnonymousElectionVote.objects.filter(
+                voter_hash=voter_hash, 
+                position=candidate.position
+            ).first()
+            
+            if existing_vote:
+                return Response({
+                    "error": f"You have already voted for {candidate.position.name}"
+                }, status=400)
+
+            # Get client IP for basic fraud prevention (hashed)
+            client_ip = request.META.get('HTTP_X_FORWARDED_FOR')
+            if client_ip:
+                client_ip = client_ip.split(',')[0].strip()
+            else:
+                client_ip = request.META.get('REMOTE_ADDR')
+            
+            ip_hash = AnonymousElectionVote.hash_ip(client_ip)
+            
+            # Create anonymous vote
+            from django.utils import timezone
+            vote_time = timezone.now()
+            
+            vote_signature = AnonymousElectionVote.create_vote_signature(
+                voter_hash,
+                candidate.id,
+                vote_time.isoformat()
+            )
+            
+            anonymous_vote = AnonymousElectionVote.objects.create(
+                voter_hash=voter_hash,
+                candidate=candidate,
+                position=candidate.position,
+                vote_signature=vote_signature,
+                ip_hash=ip_hash
+            )
+            
+            # Update candidate vote count (using anonymous votes)
+            anonymous_vote_count = candidate.anonymous_votes.count()
+            candidate.vote_count = anonymous_vote_count
+            candidate.save()
+            
+            # Update user profile voting status flags
+            profile = get_or_create_user_profile(request.user)
+            if candidate.position.name.lower() == "president":
+                profile.voted_president = True
+            elif candidate.position.name.lower() in ["general secretary", "gensec"]:
+                profile.voted_gen_sec = True
+            profile.save()
+
             return Response({
-                "error": f"You have already voted for {candidate.position.name}"
-            }, status=400)
-
-        # Get client IP for basic fraud prevention (hashed)
-        client_ip = request.META.get('HTTP_X_FORWARDED_FOR')
-        if client_ip:
-            client_ip = client_ip.split(',')[0].strip()
-        else:
-            client_ip = request.META.get('REMOTE_ADDR')
-        
-        ip_hash = AnonymousElectionVote.hash_ip(client_ip)
-        
-        # Create anonymous vote
-        from django.utils import timezone
-        vote_time = timezone.now()
-        
-        vote_signature = AnonymousElectionVote.create_vote_signature(
-            voter_hash,
-            candidate.id,
-            vote_time.isoformat()
-        )
-        
-        anonymous_vote = AnonymousElectionVote.objects.create(
-            voter_hash=voter_hash,
-            candidate=candidate,
-            position=candidate.position,
-            vote_signature=vote_signature,
-            ip_hash=ip_hash
-        )
-        
-        # Update candidate vote count (using anonymous votes)
-        anonymous_vote_count = candidate.anonymous_votes.count()
-        candidate.vote_count = anonymous_vote_count
-        candidate.save()
-        
-        # Update user profile voting status flags
-        profile = get_or_create_user_profile(request.user)
-        if candidate.position.name.lower() == "president":
-            profile.voted_president = True
-        elif candidate.position.name.lower() in ["general secretary", "gensec"]:
-            profile.voted_gen_sec = True
-        profile.save()
-
-        return Response({
-            "success": f"Anonymous vote cast successfully for {candidate.name}",
-            "vote_id": anonymous_vote.id,
-            "voter_id": voter_hash[:8],  # Only first 8 chars for identification
-            "verification": {
-                "signature": vote_signature,
-                "timestamp": vote_time.isoformat()
-            }
-        })
-
+                "success": f"Anonymous vote cast successfully for {candidate.name}",
+                "vote_id": anonymous_vote.id,
+                "voter_id": voter_hash[:8],  # Only first 8 chars for identification
+                "verification": {
+                    "signature": vote_signature,
+                    "timestamp": vote_time.isoformat()
+                }
+            })
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
