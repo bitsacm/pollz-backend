@@ -1,0 +1,155 @@
+name: Pollz CI/CD Workflow
+
+
+# Setting triggers for this workflow
+on:
+  pull_request:
+    branches:
+      - main # Pull requests to main branch must be checked and verified
+  push:
+    branches:
+      - main
+
+jobs:
+  health-check-job: # health check job for testing and code formatting check
+    runs-on: ubuntu-latest # os for running the job
+    services:
+      db: # service name changed to `db` so Django settings default HOST 'db' resolves
+        image: postgres
+        env: # the environment variable must match with app/settings.py if block of DATABASES variable otherwise test will fail due to connectivity issue.
+          POSTGRES_USER: ${{ env.POSTGRES_USER || 'pollz_user' }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD || 'pollz_password' }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB || 'pollz_db' }}
+          POSTGRES_HOST: ${{ env.POSTGRES_HOST || '127.0.0.1' }}
+        ports:
+          - 5432:5432 # exposing 5432 port for application to use
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd "pg_isready -U pollz_user" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Checkout code # checking out the code at current commit that triggers the workflow
+        uses: actions/checkout@v3
+      - name: Cache dependency # caching dependency will make our build faster.
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Setup python environment # setting python environment to 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' # Same version as the one used in Dockerfile
+      - name: Check Python version # checking the python version to see if 3.x is installed.
+        run: python --version
+      - name: Install requirements # install application requirements
+        run: pip install -r requirements.txt
+      - name: Wait for Postgres # wait until Postgres is reachable
+        run: |
+          echo "Waiting for Postgres to be ready on 127.0.0.1:5432..."
+          for i in $(seq 1 30); do
+            if bash -c "echo > /dev/tcp/127.0.0.1/5432" >/dev/null 2>&1; then
+              echo "Postgres is up"
+              exit 0
+            fi
+            echo "Waiting for Postgres ($i/30)..."
+            sleep 1
+          done
+          echo "Postgres did not become ready in time" >&2
+          exit 1
+      # - name: Check Syntax # check code formatting
+      #   run: pip install pycodestyle && pycodestyle --statistics .
+      - name: Django system checks
+        run: python manage.py check
+
+      - name: Check for missing migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Migrate
+        run: python manage.py migrate --noinput
+
+      - name: Populate sample data
+        run: |
+          set -e
+          # populate optional sample data used by API endpoints (no-fail if commands absent)
+          python manage.py populate_sample_data || true
+          python manage.py populate_oasis_data || true
+          python manage.py populate_huel_courses || true
+          python manage.py add_election_candidates || true
+
+      - name: Collect static (if applicable)
+        run: python manage.py collectstatic --noinput
+        continue-on-error: true
+
+      - name: Run Tests
+        run: python manage.py test
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Ensure npm is available
+        run: |
+          which npm || (echo "npm not found!" && exit 1)
+          npm --version
+
+      - name: Install Bruno CLI
+        run: |
+          npm install -g @usebruno/cli
+          which bru || (echo "bru CLI not found after install!" && exit 1)
+          bru --version
+      
+      - name: Run API Tests
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          echo "==> Generating CI user and JWT tokens"
+          TOKENS=$(python manage.py shell -c "from django.contrib.auth import get_user_model; from rest_framework_simplejwt.tokens import RefreshToken; User=get_user_model(); u,created=User.objects.get_or_create(username='ciuser', defaults={'email':'ci@example.com'}); u.set_password('ci_password123'); u.is_staff=True; u.is_superuser=True; u.save(); r=RefreshToken.for_user(u); print(str(r)); print(str(r.access_token))")
+          REFRESH=$(echo "$TOKENS" | sed -n '1p')
+          ACCESS=$(echo "$TOKENS" | sed -n '2p')
+          echo "Generated access token (truncated): ${ACCESS:0:20}..."
+
+          echo "==> Writing bruno/environments/Development.bru (base_url will use port 6969)"
+          printf '%s\n' "vars {" "  base_url: http://localhost:6969" "  api_prefix: /api" "  auth_token: \"$ACCESS\"" "  refresh_token: \"$REFRESH\"" "}" > bruno/environments/Development.bru
+
+          echo "==> Ensure no previous Django processes are running"
+          sudo apt-get update && sudo apt-get install -y psmisc
+          fuser -k 6969/tcp || true
+          pkill -f 'manage.py runserver' || true
+          sleep 1
+
+          echo "==> Starting Django runserver on port 6969 and logging to server.log"
+          nohup python manage.py runserver 0.0.0.0:6969 > server.log 2>&1 &
+          sleep 2
+
+          # wait for server to be responsive (up to ~120 seconds)
+
+          for i in $(seq 1 ); do
+            if curl -sS http://localhost:6969/ >/dev/null 2>&1; then
+              echo "Django server is up on port 6969"
+              break
+            fi
+            echo "Waiting for Django server ($i/60) on port 6969..."
+            sleep 2
+          done
+
+          echo "==> Bruno directory contents (for debug)"
+          ls -lh bruno/
+          ls -lh bruno/*/*.bru || true
+
+          echo "==> Running Bruno tests"
+          if find bruno -type f -name "*.bru" | grep -q . || [ -f "bruno/environments/Development.bru" ]; then
+            (cd bruno && bru run --env Development)
+          else
+            echo "No .bru files found to run."
+          fi
+
+          echo "==> Dumping Django logs (last 200 lines)"
+          if [ -f server.log ]; then
+            tail -n 200 server.log
+          else
+            echo "server.log not found."
+          fi
+        
+        shell: bash
